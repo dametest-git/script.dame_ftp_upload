@@ -1,24 +1,23 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-import sys
 import xbmc
 import xbmcgui
 import xbmcvfs
 import xbmcaddon
 import ftplib
 import os
+import time
 import glob
 import pickle
-import socket
+import threading
+from datetime import datetime
 
 ADDON = xbmcaddon.Addon('script.dame_ftp_upload')
 DATA_PATH = xbmcvfs.translatePath(ADDON.getAddonInfo('profile'))
 STATE_FILE = os.path.join(DATA_PATH, 'file_states.pkl')
 
 def log(msg):
-    xbmc.log(f"[DAME_FTP_UPLOAD] {msg}", xbmc.LOGINFO)
+    xbmc.log(f"[DAME FTP UPLOAD] {msg}", xbmc.LOGINFO)
 
-def get_states():
+def load_states():
     try:
         with open(STATE_FILE, 'rb') as f:
             return pickle.load(f)
@@ -26,98 +25,100 @@ def get_states():
         return {}
 
 def save_states(states):
-    try:
-        os.makedirs(os.path.dirname(STATE_FILE), exist_ok=True)
-        with open(STATE_FILE, 'wb') as f:
-            pickle.dump(states, f)
-    except Exception as e:
-        log(f"Save states error: {e}")
+    os.makedirs(os.path.dirname(STATE_FILE), exist_ok=True)
+    with open(STATE_FILE, 'wb') as f:
+        pickle.dump(states, f)
 
-def ftp_connect():
+def test_ftp():
+    try:
+        server = ADDON.getSetting('ftp_server')
+        port = int(ADDON.getSetting('ftp_port'))
+        user = ADDON.getSetting('ftp_user')
+        pwd = ADDON.getSetting('ftp_password')
+        passive = ADDON.getSetting('ftp_passive') == 'true'
+        
+        ftp = ftplib.FTP()
+        ftp.connect(server, port)
+        ftp.login(user, pwd)
+        ftp.set_pasv(passive)
+        ftp.quit()
+        xbmcgui.Dialog().ok('Test OK', 'FTP spojenie úspešné.')
+        log('Test connection successful')
+    except Exception as e:
+        xbmcgui.Dialog().ok('Test failed', str(e))
+        log(f'Test connection failed: {e}')
+
+def upload_file(ftp, local_path, remote_path):
+    try:
+        with open(local_path, 'rb') as f:
+            ftp.storbinary(f'STOR {remote_path}', f)
+        log(f'Uploaded: {local_path}')
+        return True
+    except Exception as e:
+        log(f'Upload failed {local_path}: {e}')
+        return False
+
+def do_upload(force=False):
+    source_base = xbmcvfs.translatePath(ADDON.getSetting('source_dir'))
+    mask = ADDON.getSetting('file_mask')
+    
+    if not xbmcvfs.exists(source_base):
+        log('Source dir not exists')
+        return
+    
+    states = load_states() if not force else {}
+    
+    ftp_dir = ADDON.getSetting('ftp_dir').lstrip('/')
     server = ADDON.getSetting('ftp_server')
-    port = int(ADDON.getSetting('ftp_port') or 21)
+    port = int(ADDON.getSetting('ftp_port'))
     user = ADDON.getSetting('ftp_user')
     pwd = ADDON.getSetting('ftp_password')
     passive = ADDON.getSetting('ftp_passive') == 'true'
-    ftp_dir = ADDON.getSetting('ftp_dir').lstrip('/')
     
-    ftp = ftplib.FTP()
-    ftp.connect(server, port, timeout=10)
-    ftp.login(user, pwd)
-    ftp.set_pasv(passive)
-    ftp.cwd(f'/{ftp_dir}')
-    return ftp
-
-def test_connection():
     try:
-        ftp = ftp_connect()
-        ftp.quit()
-        xbmcgui.Dialog().ok('Test úspešný', 'FTP pripojenie funguje.')
-        log('FTP test OK')
-        return True
+        ftp = ftplib.FTP()
+        ftp.connect(server, port)
+        ftp.login(user, pwd)
+        ftp.cwd('/' + ftp_dir)
+        ftp.set_pasv(passive)
     except Exception as e:
-        xbmcgui.Dialog().ok('Test zlyhal', str(e))
-        log(f"FTP test failed: {e}")
-        return False
-
-def upload_files(force=False):
-    source_dir = xbmcvfs.translatePath(ADDON.getSetting('source_dir'))
-    mask = ADDON.getSetting('file_mask') or 'epg*.xml'
-    
-    if not os.path.isdir(source_dir):
-        xbmcgui.Dialog().ok('Chyba', f'Zdrojový adresár neexistuje: {source_dir}')
+        log(f'FTP connect failed: {e}')
         return
     
-    states = {} if force else get_states()
-    pattern = os.path.join(source_dir, mask)
+    pattern = os.path.join(source_base, mask)
     files = glob.glob(pattern)
     
-    if not files:
-        xbmcgui.Dialog().ok('Žiadne súbory', f'Žiadne súbory pre masku: {mask}')
-        return
+    progress = xbmcgui.DialogProgress()
+    progress.create('FTP Upload', 'Pripojujem...')
+    progress.update(0)
     
-    try:
-        ftp = ftp_connect()
-    except:
-        return
-    
-    dialog = xbmcgui.DialogProgress()
-    dialog.create('FTP Upload', 'Pripravujem...')
-    dialog.update(0)
-    
-    count = 0
-    total = len(files)
-    for idx, fpath in enumerate(files):
-        try:
-            mtime = os.path.getmtime(fpath)
-            fname = os.path.basename(fpath)
-            if force or states.get(fname, 0) < mtime:
-                with open(fpath, 'rb') as fl:
-                    ftp.storbinary(f'STOR {fname}', fl)
-                states[fname] = mtime
-                count += 1
-                log(f"Nahral: {fname}")
-            
-            pct = int(100 * (idx + 1) / total)
-            dialog.update(pct, f"Nahrávam {fname}")
-            if dialog.iscanceled():
-                break
-        except Exception as e:
-            log(f"Chyba {fpath}: {e}")
+    uploaded = 0
+    for i, local_file in enumerate(files):
+        mtime = os.path.getmtime(local_file)
+        state_mtime = states.get(os.path.basename(local_file), 0)
+        
+        if force or mtime > state_mtime:
+            rel_path = os.path.basename(local_file)
+            if upload_file(ftp, local_file, rel_path):
+                states[rel_path] = mtime
+                uploaded += 1
+        
+        pct = int((i + 1) / len(files) * 100)
+        progress.update(pct, f'Spracovávam: {os.path.basename(local_file)}')
+        if progress.iscanceled():
+            break
     
     ftp.quit()
-    dialog.close()
-    save_states(states)
-    xbmcgui.Dialog().ok('Hotovo', f"Nahralo {count}/{total} súborov.")
-
-if __name__ == "__main__":
-    mode = sys.argv[1] if len(sys.argv) > 1 else "upload"
-    log(f"Spustené s parametrom: {mode}")
+    progress.close()
     
-    if mode == "test":
-        test_connection()
-    elif mode == "force":
-        upload_files(True)
+    save_states(states)
+    xbmcgui.Dialog().ok('Upload hotový', f'Nahralo sa {uploaded} súborov.')
+
+if __name__ == '__main__':
+    param = xbmc.executebuiltin('XBMC.RunPlugin({})'.format(xbmc.getsysarg(1)[1:]))
+    if 'test' in xbmc.getsysarg(1):
+        test_ftp()
+    elif 'force' in xbmc.getsysarg(1):
+        do_upload(True)
     else:
-        upload_files(False)
-    xbmc.executebuiltin("XBMC.ActivateWindow(Home)")
+        do_upload()
