@@ -1,0 +1,135 @@
+# Kodi Media Center language file
+# Addon Name: Dame FTP Upload
+# Addon ID: script.dame_ftp_upload
+# Addon Provider: dame
+
+msgid ""
+msgstr ""
+"Project-Id-Version: Dame FTP Upload 1.0.2\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-02-02 14:00+0100\n"
+"PO-Revision-Date: 2026-02-02 14:00+0100\n"
+"Last-Translator: Dame\n"
+"Language-Team: Slovak <>\n"
+"Language: sk\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
+"X-Generator: Manual\n"
+
+msgctxt "#30000"
+msgid "Zdroj"
+msgstr "Zdroj"
+
+msgctxt "#30001"
+msgid "Adresár zdroja"
+msgstr "Adresár zdroja"
+
+msgctxt "#30002"
+msgid "Maska súboru"
+msgstr "Maska súboru"
+
+msgctxt "#30003"
+msgid "FTP Cieľ"
+msgstr "FTP Cieľ"
+
+msgctxt "#30004"
+msgid "FTP Server"
+msgstr "FTP Server"
+
+msgctxt "#30005"
+msgid "FTP Port"
+msgstr "FTP Port"
+
+msgctxt "#30006"
+msgid "FTP Adresár"
+msgstr "FTP Adresár"
+
+msgctxt "#30007"
+msgid "FTP Používateľ"
+msgstr "FTP Používateľ"
+
+msgctxt "#30008"
+msgid "FTP Heslo"
+msgstr "FTP Heslo"
+
+msgctxt "#30009"
+msgid "Pasívny režim"
+msgstr "Pasívny režim"
+
+msgctxt "#30010"
+msgid "Test pripojenia"
+msgstr "Test pripojenia"
+
+msgctxt "#30011"
+msgid "Automatizácia"
+msgstr "Automatizácia"
+
+msgctxt "#30012"
+msgid "Kontrolovať pravidelne"
+msgstr "Kontrolovať pravidelne"
+
+msgctxt "#30013"
+msgid "Frekvencia kontroly (h)"
+msgstr "Frekvencia kontroly (h)"
+
+msgctxt "#30014"
+msgid "Spustiť pri štarte"
+msgstr "Spustiť pri štarte"
+
+msgctxt "#30015"
+msgid "Vynútiť upload"
+msgstr "Vynútiť upload"
+
+msgctxt "#30016"
+msgid "Test úspešný"
+msgstr "Test úspešný"
+
+msgctxt "#30017"
+msgid "FTP pripojenie funguje."
+msgstr "FTP pripojenie funguje."
+
+msgctxt "#30018"
+msgid "Test zlyhal"
+msgstr "Test zlyhal"
+
+msgctxt "#30019"
+msgid "Chyba"
+msgstr "Chyba"
+
+msgctxt "#30020"
+msgid "Zdrojový adresár neexistuje"
+msgstr "Zdrojový adresár neexistuje"
+
+msgctxt "#30021"
+msgid "Žiadne súbory"
+msgstr "Žiadne súbory"
+
+msgctxt "#30022"
+msgid "Žiadne súbory pre masku"
+msgstr "Žiadne súbory pre masku"
+
+msgctxt "#30023"
+msgid "Hotovo"
+msgstr "Hotovo"
+
+msgctxt "#30024"
+msgid "Nahralo sa"
+msgstr "Nahralo sa"
+
+msgctxt "#30025"
+msgid "súborov"
+msgstr "súborov"
+
+msgctxt "#30026"
+msgid "FTP Upload"
+msgstr "FTP Upload"
+
+msgctxt "#30027"
+msgid "Pripravujem..."
+msgstr "Pripravujem..."
+
+msgctxt "#30028"
+msgid "Nahrávam"
+msgstr "Nahrávam"
