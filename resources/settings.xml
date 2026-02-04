@@ -11,12 +11,12 @@
     <setting id="ftp_user" type="text" label="30007" default="dame@neupra.cu.ma" />
     <setting id="ftp_password" type="text" label="30008" option="hidden" />
     <setting id="ftp_passive" type="bool" label="30009" default="true" />
-    <setting id="test_connection" type="action" label="30010" action="RunAddon(script.dame_ftp_upload,test)" />
+    <setting id="test_connection" type="action" label="30010" action="RunScript(script.dame_ftp_upload,test)" />
   </category>
   <category label="30011">
     <setting id="check_regularly" type="bool" label="30012" default="false" />
     <setting id="check_frequency" type="slider" label="30013" default="3" min="1" max="24" step="1" />
     <setting id="start_on_boot" type="bool" label="30014" default="false" />
-    <setting id="force_upload" type="action" label="30015" action="RunAddon(script.dame_ftp_upload,force)" />
+    <setting id="force_upload" type="action" label="30015" action="RunScript(script.dame_ftp_upload,force)" />
   </category>
 </settings>
